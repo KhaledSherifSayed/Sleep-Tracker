@@ -51,6 +51,40 @@ class SleepTrackerViewModel(val database: SleepDatabaseDao,
 
     private val nights = database.getAllNights()
 
+    val startButtonVisible = Transformations.map(tonight) {
+        it == null
+    }
+
+    val stopButtonVisible = Transformations.map(tonight) {
+        it!=null
+    }
+    val clearButtonVisible = Transformations.map(nights) {
+        it?.isNotEmpty()
+    }
+
+    /**
+    * Request a toast by setting this value to true.
+    *
+    * This is private because we don't want to expose setting this value to the Fragment.
+    */
+    private var _showSnackbarEvent = MutableLiveData<Boolean>()
+    /**
+     * If this is true, immediately `show()` a toast and call `doneShowingSnackbar()`.
+     */
+    val showSnackBarEvent: LiveData<Boolean>
+        get() = _showSnackbarEvent
+    /**
+     * Variable that tells the Fragment to navigate to a specific [SleepQualityFragment]
+     *
+     * This is private because we don't want to expose setting this value to the Fragment.
+     */
+    private val _navigateToSleepQuality = MutableLiveData<SleepNight>()
+    /**
+     * If this is non-null, immediately navigate to [SleepQualityFragment] and call [doneNavigating]
+     */
+    val navigateToSleepQuality: LiveData<SleepNight>
+        get() = _navigateToSleepQuality
+
     /**
     //to getTonightFromDatabase().
      * Converted nights to Spanned for displaying.
@@ -59,17 +93,9 @@ class SleepTrackerViewModel(val database: SleepDatabaseDao,
         formatNights(nights, application.resources)
     }
 
-    /**
-    * Variable that tells the Fragment to navigate to a specific [SleepQualityFragment]
-    *
-    * This is private because we don't want to expose setting this value to the Fragment.
-    */
-    private val _navigateToSleepQuality = MutableLiveData<SleepNight>()
-    /**
-     * If this is non-null, immediately navigate to [SleepQualityFragment] and call [doneNavigating]
-     */
-    val navigateToSleepQuality: LiveData<SleepNight>
-        get() = _navigateToSleepQuality
+    init {
+        initializeTonight()
+    }
 
     /**
      * Call this immediately after navigating to [SleepQualityFragment]
@@ -81,9 +107,14 @@ class SleepTrackerViewModel(val database: SleepDatabaseDao,
         _navigateToSleepQuality.value = null
     }
 
-    init {
-        initializeTonight()
-
+    /**
+     * Call this immediately after calling `show()` on a toast.
+     *
+     * It will clear the toast request, so if the user rotates their phone it won't show a duplicate
+     * toast.
+     */
+    fun doneShowingSnackbar() {
+        _showSnackbarEvent.value = false
     }
 
     private fun initializeTonight() {
@@ -160,6 +191,7 @@ class SleepTrackerViewModel(val database: SleepDatabaseDao,
             // And clear tonight since it's no longer in the database
             tonight.value = null
         }
+        _showSnackbarEvent.value = true
     }
 
     private suspend fun clear() {
