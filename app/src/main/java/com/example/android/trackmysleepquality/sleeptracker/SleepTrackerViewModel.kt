@@ -85,6 +85,11 @@ class SleepTrackerViewModel(val database: SleepDatabaseDao,
     val navigateToSleepQuality: LiveData<SleepNight>
         get() = _navigateToSleepQuality
 
+
+    private val _navigateToSleepDataQuality = MutableLiveData<Long>()
+    val navigateToSleepDataQuality
+        get() = _navigateToSleepDataQuality
+
     /**
     //to getTonightFromDatabase().
      * Converted nights to Spanned for displaying.
@@ -95,6 +100,15 @@ class SleepTrackerViewModel(val database: SleepDatabaseDao,
 
     init {
         initializeTonight()
+    }
+
+
+    fun onSleepNightClicked(id: Long){
+        _navigateToSleepDataQuality.value = id
+    }
+
+    fun onSleepDataQualityNavigated() {
+        _navigateToSleepDataQuality.value = null
     }
 
     /**
